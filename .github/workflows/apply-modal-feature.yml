@@ -5,7 +5,7 @@ on:
     branches:
       - feat/modal-edicion-importacion
     paths:
-      - feature-payload.part.*
+      - modal-feature.patch.part.*
       - .github/workflows/apply-modal-feature.yml
 
 permissions:
@@ -20,14 +20,13 @@ jobs:
         with:
           ref: feat/modal-edicion-importacion
           fetch-depth: 0
-      - name: Apply feature payload
+      - name: Apply feature patch
         shell: bash
         run: |
-          test -f feature-payload.part.03 || exit 0
-          cat feature-payload.part.* | base64 --decode > /tmp/feature-payload.tgz
-          echo "3d20a8a13147fb09e1544f51d0de381f3375a907322a1b8f1855095232d7982d  /tmp/feature-payload.tgz" | sha256sum --check -
-          tar -xzf /tmp/feature-payload.tgz -C .
-          rm -f feature-payload.part.* .github/workflows/apply-modal-feature.yml
+          test -f modal-feature.patch.part.03 || exit 0
+          cat modal-feature.patch.part.* > /tmp/modal-feature.patch
+          patch -p2 < /tmp/modal-feature.patch
+          rm -f modal-feature.patch.part.* .github/workflows/apply-modal-feature.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
