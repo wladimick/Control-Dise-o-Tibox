@@ -21,10 +21,14 @@ type DraftTask = {
   comments: string | null;
 };
 
+function uid() {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 function parseHours(value: string) {
   const text = value.toLowerCase().trim().replace(",", ".");
   const hours = text.match(/(\d+(?:\.\d+)?)\s*h/);
-  const minutes = text.match(/(\d+(?:\.\d+)?)\s*m/);
+  const minutes = text.match(/(\d+(?:\.\d+)?)\s*(?:m|min)/);
   if (hours || minutes) return Number(hours?.[1] ?? 0) + Number(minutes?.[1] ?? 0) / 60;
   const plain = Number(text.replace(/[^0-9.]/g, ""));
   return Number.isFinite(plain) ? plain : 0;
@@ -64,7 +68,7 @@ function matchWorkItem(client: string, description: string, workItems: WorkItem[
 
 function makeTask(memberId: string, workItems: WorkItem[], client: string, description: string, hours: number, date?: string): DraftTask {
   return {
-    id: crypto.randomUUID(),
+    id: uid(),
     team_member_id: memberId,
     task_date: date || new Date().toISOString().slice(0, 10),
     client_name: client.trim(),
@@ -84,7 +88,7 @@ function parseText(text: string, memberId: string, workItems: WorkItem[]) {
     const pipe = line.split("|").map((part) => part.trim());
     if (pipe.length >= 3) {
       const firstHours = parseHours(pipe[0]);
-      if (firstHours > 0) return [makeTask(memberId, workItems, pipe[1], pipe[2], firstHours)];
+      if (firstHours > 0) return [makeTask(memberId, workItems, pipe[1], pipe.slice(2).join(" | "), firstHours)];
       const lastHours = parseHours(pipe[pipe.length - 1]);
       if (lastHours > 0) return [makeTask(memberId, workItems, pipe[0], pipe.slice(1, -1).join(" | "), lastHours)];
     }
@@ -136,6 +140,7 @@ export function DailyTasksBatchModal({ member, workItems, onClose }: { member: T
   const [mode, setMode] = useState<"text" | "csv">("text");
   const [text, setText] = useState("");
   const [tasks, setTasks] = useState<DraftTask[]>([]);
+  const [parseError, setParseError] = useState("");
   const [state, action, pending] = useActionState(importDailyTasksAction, {});
   const validTasks = useMemo(() => tasks.filter((task) => task.client_name.trim().length >= 2 && task.description.trim().length >= 3 && task.hours >= .25), [tasks]);
   const total = validTasks.reduce((sum, task) => sum + task.hours, 0);
@@ -151,11 +156,19 @@ export function DailyTasksBatchModal({ member, workItems, onClose }: { member: T
   }, [state.ok, router]);
 
   function preview() {
-    setTasks(mode === "text" ? parseText(text, member.id, workItems) : parseCsv(text, member.id, workItems));
+    const parsed = mode === "text" ? parseText(text, member.id, workItems) : parseCsv(text, member.id, workItems);
+    setTasks(parsed);
+    setParseError(parsed.length ? "" : "No pude interpretar ninguna línea. Usa HH | Cliente | Tarea, por ejemplo: 1,25 | Alertas DT | Trabajo realizado.");
   }
 
   function updateTask(id: string, patch: Partial<DraftTask>) {
     setTasks((current) => current.map((task) => task.id === id ? { ...task, ...patch } : task));
+  }
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    if (validTasks.length) return;
+    event.preventDefault();
+    preview();
   }
 
   return (
@@ -166,31 +179,33 @@ export function DailyTasksBatchModal({ member, workItems, onClose }: { member: T
           <button className="tbx-icon-button" type="button" onClick={onClose}><X size={19} /></button>
         </header>
 
-        <form action={action} className="flex min-h-0 flex-1 flex-col">
+        <form action={action} onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <input type="hidden" name="tasks_json" value={JSON.stringify(validTasks.map(({ id: _id, ...task }) => task))} />
           <div className="tbx-modal-body space-y-4">
             <div className="flex gap-2">
-              <button className={mode === "text" ? "tbx-button-primary" : "tbx-button-secondary"} type="button" onClick={() => { setMode("text"); setTasks([]); }}>Texto rápido</button>
-              <button className={mode === "csv" ? "tbx-button-primary" : "tbx-button-secondary"} type="button" onClick={() => { setMode("csv"); setTasks([]); }}>CSV</button>
+              <button className={mode === "text" ? "tbx-button-primary" : "tbx-button-secondary"} type="button" onClick={() => { setMode("text"); setTasks([]); setParseError(""); }}>Texto rápido</button>
+              <button className={mode === "csv" ? "tbx-button-primary" : "tbx-button-secondary"} type="button" onClick={() => { setMode("csv"); setTasks([]); setParseError(""); }}>CSV</button>
             </div>
 
             {mode === "text" ? (
               <div>
-                <textarea className="tbx-input min-h-40 font-mono text-sm" value={text} onChange={(event) => setText(event.target.value)} placeholder={"1,5 | TIBOX | Revisar formulario de privacidad\nVGM - Crear carpetas SharePoint - 2h\nEcoscience | Revisar DNS | 30 min"} />
+                <textarea className="tbx-input min-h-40 font-mono text-sm" value={text} onChange={(event) => { setText(event.target.value); setParseError(""); }} placeholder={"1,5 | TIBOX | Revisar formulario de privacidad\nVGM - Crear carpetas SharePoint - 2h\nEcoscience | Revisar DNS | 30 min"} />
                 <p className="tbx-help">Formatos aceptados: HH | Cliente | Tarea, Cliente | Tarea | HH o Cliente - Tarea - HH.</p>
               </div>
             ) : (
               <div className="space-y-3">
-                <label className="tbx-upload-zone"><FileText size={24} /><span className="flex-1"><strong className="block text-[var(--tbx-text)]">Seleccionar CSV</strong><span className="text-sm">Columnas mínimas: cliente, tarea y hh.</span></span><input className="sr-only" type="file" accept=".csv,text/csv" onChange={async (event) => { const file = event.target.files?.[0]; if (file) { const content = await file.text(); setText(content); setTasks(parseCsv(content, member.id, workItems)); } }} /></label>
+                <label className="tbx-upload-zone"><FileText size={24} /><span className="flex-1"><strong className="block text-[var(--tbx-text)]">Seleccionar CSV</strong><span className="text-sm">Columnas mínimas: cliente, tarea y hh.</span></span><input className="sr-only" type="file" accept=".csv,text/csv" onChange={async (event) => { const file = event.target.files?.[0]; if (file) { const content = await file.text(); setText(content); const parsed = parseCsv(content, member.id, workItems); setTasks(parsed); setParseError(parsed.length ? "" : "No pude interpretar el CSV. Revisa los encabezados cliente, tarea y hh."); } }} /></label>
                 <p className="tbx-help">También puede incluir fecha, estado, origen, ticket y comentarios.</p>
               </div>
             )}
 
             <button className="tbx-button-secondary" type="button" onClick={preview} disabled={!text.trim()}><FileText size={17} /> Interpretar y revisar</button>
 
+            {parseError ? <p className="rounded-xl border border-[color:var(--tbx-danger)]/30 bg-[color:var(--tbx-danger)]/5 p-3 text-sm text-[var(--tbx-danger)]">{parseError}</p> : null}
+
             {tasks.length ? (
               <div className="space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-3"><p><strong className="text-[var(--tbx-text)]">{validTasks.length} tareas válidas</strong> · {total.toLocaleString("es-CL", { maximumFractionDigits: 2 })} HH</p><p className="text-xs">Las asociaciones se sugieren solo cuando hay una coincidencia clara.</p></div>
+                <div className="flex flex-wrap items-center justify-between gap-3"><p><strong className="text-[var(--tbx-text)]">{validTasks.length} tareas válidas</strong> · {total.toLocaleString("es-CL", { maximumFractionDigits: 2 })} HH</p><p className="text-xs">Revisa los datos antes de guardar.</p></div>
                 <div className="tbx-table-scroll max-h-80">
                   <table className="tbx-table min-w-[980px]">
                     <thead><tr><th>Fecha</th><th>Cliente</th><th>Tarea</th><th>HH</th><th>Estado</th><th>Trabajo principal</th><th></th></tr></thead>
@@ -214,7 +229,7 @@ export function DailyTasksBatchModal({ member, workItems, onClose }: { member: T
 
           <footer className="tbx-modal-footer">
             <button className="tbx-button-ghost" type="button" onClick={onClose}>{state.ok ? "Cerrar" : "Cancelar"}</button>
-            {!state.ok ? <button className="tbx-button-primary min-w-40" type="submit" disabled={pending || !validTasks.length}><Upload size={17} />{pending ? "Guardando…" : `Agregar ${validTasks.length || ""} tareas`}</button> : null}
+            {!state.ok ? <button className="tbx-button-primary min-w-40" type="submit" disabled={pending || !text.trim()}><Upload size={17} />{pending ? "Guardando…" : validTasks.length ? `Agregar ${validTasks.length} tareas` : "Interpretar tareas"}</button> : null}
           </footer>
         </form>
       </section>
