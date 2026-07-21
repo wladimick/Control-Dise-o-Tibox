@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useState } from "react";
 import { FileText, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { importDailyTasksAction } from "@/app/(app)/tareas-diarias/actions";
+import { WorkItemCombobox } from "@/components/daily-tasks/work-item-combobox";
 import type { TeamMember, WorkItem } from "@/lib/types";
 
 type DraftTask = {
@@ -215,7 +216,7 @@ export function DailyTasksBatchModal({ member, workItems, onClose }: { member: T
                       <td><input className="tbx-input min-w-72" value={task.description} onChange={(event) => updateTask(task.id, { description: event.target.value })} /></td>
                       <td><input className="tbx-input w-24" type="number" min=".25" step=".25" value={task.hours} onChange={(event) => updateTask(task.id, { hours: Number(event.target.value) })} /></td>
                       <td><select className="tbx-input min-w-32" value={task.status} onChange={(event) => updateTask(task.id, { status: event.target.value as DraftTask["status"] })}><option value="done">Realizada</option><option value="pending">Pendiente</option><option value="blocked">Bloqueada</option></select></td>
-                      <td><select className="tbx-input min-w-64" value={task.work_item_id ?? ""} onChange={(event) => updateTask(task.id, { work_item_id: event.target.value || null })}><option value="">Sin asociar</option>{workItems.map((item) => <option key={item.id} value={item.id}>{item.client_name} · {item.title}</option>)}</select></td>
+                      <td><WorkItemCombobox items={workItems} value={task.work_item_id} onChange={(value) => updateTask(task.id, { work_item_id: value })} compact placeholder="Buscar por cliente, código o trabajo..." /></td>
                       <td><button className="tbx-button-ghost text-[var(--tbx-danger)]" type="button" onClick={() => setTasks((current) => current.filter((item) => item.id !== task.id))}>Quitar</button></td>
                     </tr>)}</tbody>
                   </table>
