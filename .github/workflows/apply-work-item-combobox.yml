@@ -1,0 +1,32 @@
+name: Apply work item combobox
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/scripts/apply-work-item-combobox.mjs
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply searchable selector
+        run: node .github/scripts/apply-work-item-combobox.mjs
+      - name: Commit changes
+        run: |
+          rm -f .github/scripts/apply-work-item-combobox.mjs .github/workflows/apply-work-item-combobox.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: reemplazar select de trabajos por buscador"
+          git push
