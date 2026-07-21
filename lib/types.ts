@@ -11,6 +11,7 @@ export type WorkItemStatus =
   | "discarded";
 export type WorkItemSource = "manual" | "support" | "projects" | "email" | "commercial" | "other";
 export type WorkCategory = "external" | "internal";
+export type DailyTaskStatus = "pending" | "done" | "blocked";
 
 export type Profile = {
   id: string;
@@ -61,6 +62,25 @@ export type WorkItem = {
   created_at: string;
   updated_at: string;
   assignments: Assignment[];
+};
+
+export type DailyTask = {
+  id: string;
+  team_member_id: string;
+  team_member: TeamMember;
+  work_item_id: string | null;
+  work_item: Pick<WorkItem, "id" | "code" | "client_name" | "title"> | null;
+  task_date: string;
+  client_name: string;
+  description: string;
+  hours: number;
+  source: WorkItemSource;
+  source_reference: string | null;
+  source_url: string | null;
+  status: DailyTaskStatus;
+  comments: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type ActionState = {

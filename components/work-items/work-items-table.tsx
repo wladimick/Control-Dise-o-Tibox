@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Columns3, ExternalLink, Pencil, Search, Settings2, Trash2, TrendingUp } from "lucide-react";
 import { deleteWorkItemAction, promoteWorkItemAction } from "@/app/(app)/trabajo/actions";
@@ -36,7 +37,7 @@ function defaultVisibility() {
   return Object.fromEntries(columns.map((column) => [column.key, column.defaultVisible])) as Record<ColumnKey, boolean>;
 }
 
-export function WorkItemsTable({ items, role, reportMode = false, onOpenItem }: { items: WorkItem[]; role: AppRole; reportMode?: boolean; onOpenItem: (item: WorkItem) => void }) {
+export function WorkItemsTable({ items, role, reportMode = false }: { items: WorkItem[]; role: AppRole; reportMode?: boolean }) {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
   const [status, setStatus] = useState("all");
@@ -53,6 +54,7 @@ export function WorkItemsTable({ items, role, reportMode = false, onOpenItem }: 
   });
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     window.localStorage.setItem(storageKey, JSON.stringify(visible));
@@ -129,18 +131,7 @@ export function WorkItemsTable({ items, role, reportMode = false, onOpenItem }: 
           </tr></thead>
           <tbody>
             {filtered.map((item) => (
-              <tr
-                key={item.id}
-                className="cursor-pointer"
-                tabIndex={0}
-                onClick={(event) => {
-                  if ((event.target as HTMLElement).closest("a,button,input,select,form")) return;
-                  onOpenItem(item);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") onOpenItem(item);
-                }}
-              >
+              <tr key={item.id}>
                 {visible.code && <td className="tbx-mono text-xs">{item.code}</td>}
                 {visible.client && <td className="sticky-left min-w-44 font-semibold text-[var(--tbx-text)]">{item.client_name}</td>}
                 {visible.title && <td className="min-w-72"><p className="font-semibold text-[var(--tbx-text)]">{item.title}</p>{item.comments ? <p className="mt-1 line-clamp-2 text-xs">{item.comments}</p> : null}</td>}
@@ -156,7 +147,7 @@ export function WorkItemsTable({ items, role, reportMode = false, onOpenItem }: 
                 {visible.report && <td><Badge tone={item.report_to_cesar ? "green" : "neutral"}>{item.report_to_cesar ? "Sí" : "No"}</Badge></td>}
                 {visible.updated && <td className="whitespace-nowrap text-xs">{formatDateTime(item.updated_at)}</td>}
                 {visible.actions && <td><div className="flex items-center gap-1">
-                  <button className="tbx-button-ghost" type="button" onClick={() => onOpenItem(item)} title={canEdit(role) ? "Editar" : "Ver"}><Pencil size={16} /></button>
+                  <Link className="tbx-button-ghost" href={`/trabajo/${item.id}/editar`} title={canEdit(role) ? "Editar" : "Ver"}><Pencil size={16} /></Link>
                   {canEdit(role) && item.type === "task" && !item.report_to_cesar ? <form action={promoteWorkItemAction}><input type="hidden" name="id" value={item.id} /><button className="tbx-button-ghost" type="submit" title="Promover a requerimiento"><TrendingUp size={16} /></button></form> : null}
                   {role === "admin" ? <form action={deleteWorkItemAction} onSubmit={(e) => { if (!window.confirm("¿Eliminar este registro?")) e.preventDefault(); }}><input type="hidden" name="id" value={item.id} /><button className="tbx-button-ghost text-[var(--tbx-danger)]" type="submit" title="Eliminar"><Trash2 size={16} /></button></form> : null}
                 </div></td>}

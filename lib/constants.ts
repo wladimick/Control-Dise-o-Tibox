@@ -4,6 +4,7 @@ import type {
   WorkItemSource,
   WorkItemStatus,
   WorkItemType,
+  DailyTaskStatus,
 } from "@/lib/types";
 
 export const TYPE_LABELS: Record<WorkItemType, string> = {
@@ -45,3 +46,9 @@ export const CATEGORY_LABELS: Record<WorkCategory, string> = {
 };
 
 export const AREA_OPTIONS = ["Diseño", "Analítica", "Desarrollo", "Consultoría", "Subgerencia"];
+
+export const DAILY_STATUS_LABELS: Record<DailyTaskStatus, string> = {
+  pending: "Pendiente",
+  done: "Realizada",
+  blocked: "Bloqueada",
+};

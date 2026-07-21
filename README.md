@@ -13,6 +13,7 @@ Aplicación pequeña para que Diseño TI gestione tareas, requerimientos, proyec
 - Cálculo automático de duración y HH semanales.
 - Exportación Excel compatible con la estructura principal del consolidado.
 - Dashboard con carga activa y pendientes de clasificación.
+- Tareas diarias por Wladimick y Braulio, con HH reales, filtros, columnas configurables y asociación a trabajos principales.
 - Diseño TIBOX: portal claro, compacto, tipografías y tokens de marca.
 
 ## 1. Crear el proyecto Supabase
@@ -20,9 +21,10 @@ Aplicación pequeña para que Diseño TI gestione tareas, requerimientos, proyec
 1. Crea un proyecto en Supabase.
 2. Abre **SQL Editor**.
 3. Ejecuta `supabase/migrations/20260720_initial.sql`.
-4. Opcional: ejecuta `supabase/seed.sql` para cargar el equipo y los registros iniciales de julio de 2026.
-5. En **Authentication > Users**, crea manualmente los usuarios de Wladimick, Braulio y César.
-6. Ejecuta las instrucciones comentadas al final de la migración para asignar los roles por correo.
+4. Ejecuta `supabase/migrations/20260721_daily_tasks.sql`.
+5. Opcional: ejecuta `supabase/seed.sql` para cargar el equipo y los registros iniciales de julio de 2026.
+6. En **Authentication > Users**, crea manualmente los usuarios de Wladimick, Braulio y César.
+7. Ejecuta las instrucciones comentadas al final de la migración para asignar los roles por correo.
 
 La aplicación no expone registro público. Los usuarios se crean desde Supabase.
 

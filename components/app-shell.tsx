@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BarChart3, ClipboardList, FileSpreadsheet, LogOut, Plus } from "lucide-react";
+import { BarChart3, CalendarClock, ClipboardList, FileSpreadsheet, LogOut, Plus } from "lucide-react";
 import { TiboxLogo } from "@/components/brand/tibox-logo";
 import { signOutAction } from "@/app/(app)/actions";
 import type { Profile } from "@/lib/types";
@@ -8,6 +8,7 @@ import { canEdit } from "@/lib/utils";
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { href: "/trabajo", label: "Trabajo", icon: ClipboardList },
+  { href: "/tareas-diarias", label: "Tareas diarias", icon: CalendarClock },
   { href: "/reporte", label: "Reporte César", icon: FileSpreadsheet },
 ];
 
@@ -40,7 +41,7 @@ export function AppShell({ profile, children }: { profile: Profile; children: Re
           </div>
         </header>
         <main className="p-4 sm:p-6 lg:p-8">{children}</main>
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 border-t border-[var(--tbx-border)] bg-[var(--tbx-surface)] lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-[var(--tbx-border)] bg-[var(--tbx-surface)] lg:hidden">
           {nav.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} className="flex flex-col items-center gap-1 px-2 py-2 text-xs font-semibold text-[var(--tbx-text-muted)]"><Icon size={18} />{label}</Link>
           ))}

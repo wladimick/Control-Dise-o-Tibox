@@ -1,5 +1,5 @@
 import { getCurrentContext } from "@/lib/auth";
-import type { Assignment, TeamMember, WorkItem } from "@/lib/types";
+import type { Assignment, DailyTask, TeamMember, WorkItem } from "@/lib/types";
 
 const workItemSelect = `
   *,
@@ -89,4 +89,37 @@ export async function getTeamMembers(area?: string) {
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []) as TeamMember[];
+}
+
+
+const dailyTaskSelect = `
+  *,
+  team_member:team_members(id, full_name, short_name, area, role_title, email, active, sort_order),
+  work_item:work_items(id, code, client_name, title)
+`;
+
+type RawDailyTask = Omit<DailyTask, "hours" | "team_member" | "work_item"> & {
+  hours: number | string;
+  team_member: TeamMember | TeamMember[] | null;
+  work_item: DailyTask["work_item"] | DailyTask["work_item"][] | null;
+};
+
+function one<T>(value: T | T[] | null): T | null {
+  return Array.isArray(value) ? value[0] ?? null : value;
+}
+
+export async function getDailyTasks() {
+  const { supabase } = await getCurrentContext();
+  const { data, error } = await supabase
+    .from("daily_tasks")
+    .select(dailyTaskSelect)
+    .order("task_date", { ascending: false })
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as unknown as RawDailyTask[]).map((task) => ({
+    ...task,
+    hours: Number(task.hours ?? 0),
+    team_member: one(task.team_member) as TeamMember,
+    work_item: one(task.work_item),
+  }));
 }
