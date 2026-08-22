@@ -1,90 +1,77 @@
-# Control Diseño TI · TIBOX
+# SharePoint Audit · TIBOX
 
-Aplicación pequeña para que Diseño TI gestione tareas, requerimientos, proyectos y prospectos sin editar directamente el Excel consolidado de César.
+MVP para inventariar y auditar sitios Microsoft SharePoint en **modo solo lectura**.
 
-## Incluye
+La aplicación reutiliza este repositorio como base de una nueva solución. La aplicación anterior queda fuera del flujo principal y se mantiene temporalmente en rutas legacy hasta validar el MVP.
 
-- Login con Supabase Auth.
-- Roles: administrador, editor y solo lectura.
-- Bandeja de trabajo con filtros, orden y columnas ocultables.
-- Preferencias de columnas guardadas en el navegador.
-- Tareas pequeñas/grandes y opción explícita **Reportar a César**.
-- Asignación porcentual entre integrantes del equipo.
-- Cálculo automático de duración y HH semanales.
-- Exportación Excel compatible con la estructura principal del consolidado.
-- Dashboard con carga activa y pendientes de clasificación.
-- Tareas diarias por Wladimick y Braulio, con HH reales, filtros, columnas configurables y asociación a trabajos principales.
-- Diseño TIBOX: portal claro, compacto, tipografías y tokens de marca.
+## Qué hace el MVP
 
-## 1. Crear el proyecto Supabase
+- Permite agregar manualmente la URL de un sitio SharePoint.
+- Valida el sitio contra Microsoft Graph.
+- Lee nombre, URL, Site ID y última modificación.
+- Lista bibliotecas de documentos visibles.
+- Guarda temporalmente los sitios seleccionados en el navegador.
+- No crea, modifica ni elimina contenido o permisos en SharePoint.
 
-1. Crea un proyecto en Supabase.
-2. Abre **SQL Editor**.
-3. Ejecuta `supabase/migrations/20260720_initial.sql`.
-4. Ejecuta `supabase/migrations/20260721_daily_tasks.sql`.
-5. Opcional: ejecuta `supabase/seed.sql` para cargar el equipo y los registros iniciales de julio de 2026.
-6. En **Authentication > Users**, crea manualmente los usuarios de Wladimick, Braulio y César.
-7. Ejecuta las instrucciones comentadas al final de la migración para asignar los roles por correo.
+## Stack
 
-La aplicación no expone registro público. Los usuarios se crean desde Supabase.
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Microsoft Graph
 
-## 2. Variables de entorno
+## Configuración Microsoft 365
 
-Copia el ejemplo:
+Crea una App Registration en Microsoft Entra ID y configura estas variables de entorno:
 
 ```bash
-cp .env.example .env.local
+MS_TENANT_ID=
+MS_CLIENT_ID=
+MS_CLIENT_SECRET=
 ```
 
-Reemplaza los valores de Supabase en `.env.local`.
+Para el primer MVP, el permiso de aplicación más directo es:
 
-## 3. Ejecutar localmente
+```text
+Microsoft Graph
+Sites.Read.All
+```
+
+Este permiso requiere consentimiento de administrador.
+
+> Para producción se recomienda evaluar `Sites.Selected` con acceso `read` asignado únicamente a los sitios autorizados.
+
+## Desarrollo
 
 ```bash
 npm install
 npm run dev
 ```
 
-Abre `http://localhost:3000`.
-
-## 4. Subir a GitHub
+Validaciones disponibles:
 
 ```bash
-git init
-git add .
-git commit -m "feat: crear Control Diseño TI"
-git branch -M main
-git remote add origin URL_DE_TU_REPO
-git push -u origin main
+npm run typecheck
+npm run lint
+npm run build
 ```
 
-El repositorio puede ser privado. No subas `.env.local`; ya está excluido por `.gitignore`.
+## Seguridad
 
-## 5. Publicar en Vercel
+- Las credenciales de Entra ID son únicamente de servidor.
+- Nunca usar `NEXT_PUBLIC_` para el secreto.
+- No subir secretos al repositorio.
+- La integración implementada utiliza solicitudes `GET` hacia Microsoft Graph.
 
-1. Importa el repositorio desde Vercel.
-2. Agrega las variables de `.env.example` en **Project Settings > Environment Variables**.
-3. Despliega.
-4. En Supabase, agrega la URL de producción en **Authentication > URL Configuration**.
+## Roadmap inmediato
 
-## Roles
+1. Persistencia de sitios seleccionados.
+2. Lectura de grupos de seguridad e integrantes.
+3. Lectura de grupos SharePoint.
+4. Lectura de permisos y RoleAssignments.
+5. Detección de permisos heredados/exclusivos.
+6. Vista por usuario: dónde tiene acceso y por qué grupo.
+7. Comparación automática contra la matriz Excel esperada.
 
-- `admin`: crear, editar y eliminar.
-- `editor`: crear y editar.
-- `viewer`: consultar y descargar Excel.
-
-Ejemplo para asignar roles después de crear los usuarios:
-
-```sql
-update public.profiles set role = 'admin' where email = 'wdiaz@tibox.cl';
-update public.profiles set role = 'editor' where email = 'CORREO_BRAULIO';
-update public.profiles set role = 'viewer' where email = 'CORREO_CESAR';
-```
-
-## Criterio operativo sugerido
-
-- Una tarea nueva queda como `Pendiente` y **no se reporta a César**.
-- Tarea pequeña: trabajo puntual interno.
-- Tarea grande: puede promoverse a requerimiento/proyecto.
-- `Reportar a César` es una decisión explícita e independiente del tamaño.
-- Las HH representan exclusivamente la carga del Área de Diseño registrada en este sistema.
+La especificación técnica inicial está en `docs/2026-08-22-mvp-sharepoint-readonly.md`.
