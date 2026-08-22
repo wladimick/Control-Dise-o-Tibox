@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import SharePointAuditApp from "@/components/sharepoint-audit-app";
 
 export default function HomePage() {
-  redirect("/dashboard");
+  return <SharePointAuditApp />;
 }
