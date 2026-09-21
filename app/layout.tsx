@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./operations.css";
+import "./drawer.css";
 
 export const metadata: Metadata = {
   title: "Operación Diseño · TIBOX",
