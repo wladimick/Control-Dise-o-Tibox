@@ -5,12 +5,14 @@ export type WorkItemStatus =
   | "inbox"
   | "planned"
   | "in_progress"
+  | "in_review"
   | "blocked"
   | "completed"
   | "archived"
   | "discarded";
 export type WorkItemSource = "manual" | "support" | "projects" | "email" | "commercial" | "other";
 export type WorkCategory = "external" | "internal";
+export type WorkPriority = "low" | "medium" | "high" | "urgent";
 export type DailyTaskStatus = "pending" | "done" | "blocked";
 
 export type Profile = {
@@ -29,6 +31,8 @@ export type TeamMember = {
   email: string | null;
   active: boolean;
   sort_order: number;
+  avatar_url: string | null;
+  weekly_capacity: number;
 };
 
 export type Assignment = {
@@ -46,6 +50,7 @@ export type WorkItem = {
   type: WorkItemType;
   size: WorkItemSize;
   status: WorkItemStatus;
+  priority: WorkPriority;
   source: WorkItemSource;
   source_reference: string | null;
   source_url: string | null;
@@ -53,12 +58,19 @@ export type WorkItem = {
   category: WorkCategory;
   start_date: string | null;
   end_date: string | null;
+  due_date: string | null;
+  completed_at: string | null;
   duration_weeks: number;
   hh_total: number;
   hh_weekly: number;
   report_to_cesar: boolean;
   reported_at: string | null;
   comments: string | null;
+  parent_work_item_id: string | null;
+  channel: string | null;
+  content_type: string | null;
+  publish_date: string | null;
+  sort_order: number;
   created_at: string;
   updated_at: string;
   assignments: Assignment[];
