@@ -4,6 +4,7 @@ import type {
   WorkItemSource,
   WorkItemStatus,
   WorkItemType,
+  WorkPriority,
   DailyTaskStatus,
 } from "@/lib/types";
 
@@ -23,18 +24,26 @@ export const SIZE_LABELS: Record<WorkItemSize, string> = {
 
 export const STATUS_LABELS: Record<WorkItemStatus, string> = {
   inbox: "Bandeja",
-  planned: "Planificado",
+  planned: "Pendiente",
   in_progress: "En curso",
-  blocked: "Bloqueado",
-  completed: "Terminado",
-  archived: "Archivado",
-  discarded: "Descartado",
+  in_review: "En revisión",
+  blocked: "Bloqueada",
+  completed: "Realizada",
+  archived: "Archivada",
+  discarded: "Descartada",
+};
+
+export const PRIORITY_LABELS: Record<WorkPriority, string> = {
+  low: "Baja",
+  medium: "Media",
+  high: "Alta",
+  urgent: "Urgente",
 };
 
 export const SOURCE_LABELS: Record<WorkItemSource, string> = {
-  manual: "Manual",
-  support: "soporte.tibox.cl",
-  projects: "projects.tibox.cl",
+  manual: "Interno",
+  support: "Titrack",
+  projects: "Projects",
   email: "Correo",
   commercial: "Comercial",
   other: "Otro",
