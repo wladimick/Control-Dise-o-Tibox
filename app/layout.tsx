@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./operations.css";
 
 export const metadata: Metadata = {
-  title: "Control Diseño TI · TIBOX",
-  description: "Gestión liviana de tareas, requerimientos y reporte para César.",
+  title: "Operación Diseño · TIBOX",
+  description: "Gestión operativa del equipo de Diseño TIBOX.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
